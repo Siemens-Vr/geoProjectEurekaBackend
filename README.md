@@ -5,7 +5,7 @@
 
 1. Clone the project :
    ```bash
-   git clone https://github.com/votre-repo/nodejs-auth-app.git
+   git clone https://github.com/Siemens-Vr/geoProjectEurekaBackend.git
 
 2. Install the dependencies
    npm install
