@@ -2,6 +2,8 @@ const Data = require('../models/dataModel');
 const upload = require('../middlewares/uploadMiddleware');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const fs = require('fs');
+const path = require('path');
 
 // Add data (protected route)
 exports.addData = async (req, res) => {
@@ -146,6 +148,20 @@ exports.deleteData = async (req, res) => {
         }
 
        if (user.role === "admin" || user._id.toString() === data.userId.toString()) {
+            if (data.imagesVideos && Array.isArray(data.imagesVideos)) {
+                data.imagesVideos.forEach((fileUrl) => {
+                    const filePath = path.join(__dirname, '..', 'uploads', fileUrl.split('/uploads/')[1]);
+                    fs.unlink(filePath, (err) => {
+                        if (err) {
+                            console.error(`Error deleting file: ${filePath}`, err);
+                        } else {
+                            console.log(`Deleted file: ${filePath}`);
+                        }
+                    });
+                });
+            }
+        
+        
             await Data.findOneAndDelete({ dataId: id });
             console.log("data deleted!");
             return res.status(200).json({ message: 'Data deleted successfully' });
