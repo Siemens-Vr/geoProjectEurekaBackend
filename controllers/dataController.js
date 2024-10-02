@@ -72,7 +72,7 @@ exports.addData = async (req, res) => {
             });
             await newData.save();
             console.log("Datas added !!")
-            res.status(201).json({ message: 'Datas added' });
+            res.status(200).json({ message: 'Datas added' });
         } catch (error) {
             console.log(error)
             res.status(500).json({ message: 'Server error' });
@@ -144,7 +144,7 @@ exports.deleteData = async (req, res) => {
 
         const data = await Data.findOne({ dataId: id });
         if (!data) {
-            return res.status(404).json({ message: 'Data not found' });
+            return res.status(400).json({ message: 'Data not found' });
         }
 
        if (user.role === "admin" || user._id.toString() === data.userId.toString()) {
