@@ -81,16 +81,13 @@ exports.addData = async (req, res) => {
 };
 
 exports.getDataById = async (req, res) => {
-    console.log('Fetching data for ID:', req.params.id); // Debug log
     try {
         const { id } = req.params;
-        console.log(id)
         const data = await Data.findById(id);
         if (!data) {
             console.log('Data not found for ID:', id);
             return res.status(404).json({ message: 'Data not found' });
         }
-        console.log('Data found:', data);
         res.status(200).json(data);
     } catch (error) {
         console.log('Error fetching data by ID:', error);
@@ -102,7 +99,6 @@ exports.getDataById = async (req, res) => {
 // update data (protected route)
 exports.updateData = async (req, res) => {
     console.log("Start update function");
-
     upload.array('files', 10)(req, res, async (err) => {
         if (err) {
             console.log(err);
@@ -252,11 +248,12 @@ exports.deleteData = async (req, res) => {
         const user = await User.findById(decoded.id); 
         
         const { id } = req.body;
+        console.log(id)
         if (!id) {
             return res.status(400).json({ message: 'ID is required' });
         }
 
-        const data = await Data.findOne({ dataId: id });
+        const data = await Data.findById(id);
         if (!data) {
             return res.status(400).json({ message: 'Data not found' });
         }
@@ -276,7 +273,7 @@ exports.deleteData = async (req, res) => {
             }
         
         
-            await Data.findOneAndDelete({ dataId: id });
+            await Data.findByIdAndDelete(id);
             console.log("data deleted!");
             return res.status(200).json({ message: 'Data deleted successfully' });
         } else {
@@ -291,7 +288,6 @@ exports.deleteData = async (req, res) => {
 exports.getOneProject = async (req, res) => {
     try {
         const itemId = req.query.itemId
-        console.log(itemId)
         const data = await Data.findOne({_id: itemId});
         let dataToSend
         
@@ -329,7 +325,6 @@ exports.getOneProject = async (req, res) => {
                     potentialTargets: data.potentialTargets
                 }
             }
-        
         res.status(200).json(dataToSend);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
