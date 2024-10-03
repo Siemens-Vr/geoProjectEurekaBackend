@@ -288,6 +288,53 @@ exports.deleteData = async (req, res) => {
     }
 };
 
+exports.getOneProject = async (req, res) => {
+    try {
+        const itemId = req.query.itemId
+        
+        const data = await Data.findOne({dataId: itemId});
+        let dataToSend
+        
+        dataToSend = {
+                id: data.dataId,
+                title: data.title,
+                date: new Date(data.collectionDate).toLocaleDateString('fr-FR'),
+                autor: data.author,
+                medias: convertUrlsToMediaObjects(data.imagesVideos),
+                geology: data.geologyComment,
+                geochemistry: data.geochemistryComment,
+                geophysics: data.geophysicsComment,
+                userId: data.userId,
+                datas:{
+                    location: data.location,
+                    sampleType: data.sampleType,
+                    depth: data.depth,
+                    temperature: data.temperature,
+                    pH: data.pH,
+                    electricalConductivity: data.electricalConductivity,
+                    lithology: data.lithology,
+                    alteration: data.alteration,
+                    mineralogy: data.mineralogy,
+                    geochimicalAnalysis: data.geochimicalAnalysis,
+                    texture: data.texture,
+                    hydrothermalFeatures: data.hydrothermalFeatures,
+                    structure: data.structure,
+                    method: data.method,
+                    surveyDate: data.surveyDate? new Date(data.surveyDate).toLocaleDateString('fr-FR'):null,
+                    depthOfPenetrationMeters: data.depthOfPenetrationMeters,
+                    resolutionsMeters: data.resolutionsMeters,
+                    measuredParameters: data.measuredParameters,
+                    recoveredPropertiesOfInterest: data.recoveredPropertiesOfInterest,
+                    instrumentUsed: data.instrumentUsed,
+                    potentialTargets: data.potentialTargets
+                }
+            }
+        res.status(200).json(dataToSend);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 const convertUrlsToMediaObjects = (urls) => {
     return urls.map(url => {
         const extension = url.split('.').pop();
