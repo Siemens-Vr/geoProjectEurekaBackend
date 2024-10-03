@@ -84,6 +84,7 @@ exports.getDataById = async (req, res) => {
     console.log('Fetching data for ID:', req.params.id); // Debug log
     try {
         const { id } = req.params;
+        console.log(id)
         const data = await Data.findById(id);
         if (!data) {
             console.log('Data not found for ID:', id);
@@ -100,36 +101,98 @@ exports.getDataById = async (req, res) => {
 
 // update data (protected route)
 exports.updateData = async (req, res) => {
-    const { id } = req.params;  // Correcting the typo
-    console.log("Received ID:", id);
-    if (!id) {
-        return res.status(400).json({ message: 'ID is required' });
-    }
+    console.log("Start update function");
 
-    try {
-        const token = req.headers.authorization.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Correctly verify token
-        const user = await User.findById(decoded.id);  // Assuming the token decodes `id`, not `_id`
-
-        // Find the data using the provided ObjectId
-        const data = await Data.findOne({ _id: id });
-        if (!data) {
-            return res.status(404).json({ message: 'Data not found' });
+    upload.array('files', 10)(req, res, async (err) => {
+        if (err) {
+            console.log(err);
+            return res.status(400).json({ message: err.message });
         }
 
-        // Check if the user is either an admin or the owner of the data
-        if (user.role !== "admin" && user._id.toString() !== data.userId.toString()) {
-            return res.status(403).json({ message: 'You don\'t have permission' });
+        const {
+            title, location, sampleType, collectionDate, depth, temperature, pH,
+            electricalConductivity, geochemistryComment, lithology, alteration,
+            mineralogy, geochimicalAnalysis, texture, hydrothermalFeatures, structure,
+            geologyComment, method, surveyDate, depthOfPenetrationMeters, resolutionsMeters,
+            measuredParameters, recoveredPropertiesOfInterest, instrumentUsed, potentialTargets,
+            geophysicsComment, dataId,id
+        } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ message: 'Data ID is required' });
         }
 
-        // Update the data and return the updated result
-        const updateData = await Data.findOneAndUpdate({ _id: id }, req.body, { new: true });
-        res.status(200).json({ message: 'Data updated successfully', data: updateData });
+        try {
+            // Decode token to get the user
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.id);
 
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
-    }
+            // Find the existing data entry
+            const data = await Data.findById(id); 
+            if (!data) {
+                return res.status(404).json({ message: 'Data not found' });
+            }
+
+            // Check if the user is either an admin or the owner of the data
+            if (user.role !== "admin" && user._id.toString() !== data.userId.toString()) {
+                return res.status(403).json({ message: 'You don\'t have permission to update this data' });
+            }
+
+            // If new files are uploaded, update the imagesVideos field
+            let filesPaths = data.imagesVideos;
+            if (req.files && req.files.length > 0) {
+                filesPaths = req.files.map(file => {
+                    return `${req.protocol}://${req.get('host')}/uploads/${user._id}/${file.filename}`;
+                });
+            }
+
+            // Update the data fields
+            const updatedData = await Data.findByIdAndUpdate(
+                id,
+                {
+                    title,
+                    location,
+                    sampleType,
+                    collectionDate,
+                    depth,
+                    temperature,
+                    pH,
+                    electricalConductivity,
+                    geochemistryComment,
+                    lithology,
+                    alteration,
+                    mineralogy,
+                    geochimicalAnalysis,
+                    texture,
+                    hydrothermalFeatures,
+                    structure,
+                    geologyComment,
+                    method,
+                    surveyDate,
+                    depthOfPenetrationMeters,
+                    resolutionsMeters,
+                    measuredParameters,
+                    recoveredPropertiesOfInterest,
+                    instrumentUsed,
+                    potentialTargets,
+                    geophysicsComment,
+                    imagesVideos: filesPaths,
+                },
+                { new: true } // Return the updated document
+            );
+
+            console.log("Data updated successfully");
+            res.status(200).json({ message: 'Data updated successfully', data: updatedData });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    });
 };
+
+
+
 
 // Get all data for a logged-in user
 exports.getData = async (req, res) => {

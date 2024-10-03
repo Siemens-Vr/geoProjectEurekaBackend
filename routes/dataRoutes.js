@@ -8,6 +8,6 @@ router.post('/add', protect, addData);
 router.get('/all', protect, getData);
 router.get('/:id', protect, getDataById)
 router.delete('/delete', protect, deleteData);
-router.put('/update/:id', protect, updateData);
+router.put('/update', protect, updateData);
 
 module.exports = router;
