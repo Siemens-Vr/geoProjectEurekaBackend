@@ -291,8 +291,8 @@ exports.deleteData = async (req, res) => {
 exports.getOneProject = async (req, res) => {
     try {
         const itemId = req.query.itemId
-        
-        const data = await Data.findOne({dataId: itemId});
+        console.log(itemId)
+        const data = await Data.findOne({_id: itemId});
         let dataToSend
         
         dataToSend = {
@@ -329,6 +329,7 @@ exports.getOneProject = async (req, res) => {
                     potentialTargets: data.potentialTargets
                 }
             }
+        
         res.status(200).json(dataToSend);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

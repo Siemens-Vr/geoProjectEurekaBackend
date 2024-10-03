@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/add', protect, addData);
 router.get('/all', protect, getData);
-router.get('/:id', protect, getDataById)
+router.get('/projectById/:id', protect, getDataById)
 router.delete('/delete', protect, deleteData);
 router.get('/project', protect, getOneProject);
 router.put('/update', protect, updateData);
