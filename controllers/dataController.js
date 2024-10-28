@@ -2,8 +2,10 @@ const Data = require('../models/dataModel');
 const upload = require('../middlewares/uploadMiddleware');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const Document= require('../models/docModel');
 const fs = require('fs');
 const path = require('path');
+
 
 // Add data (protected route)
 exports.addData = async (req, res) => {
@@ -336,7 +338,7 @@ const convertUrlsToMediaObjects = (urls) => {
         const extension = url.split('.').pop();
         // check etension
         let type;
-        if (['mp4', 'avi', 'mov'].includes(extension)) {
+        if (['mp4', 'avi', 'mov', 'mkv'].includes(extension)) {
             type = 'video';
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
             type = 'image';
