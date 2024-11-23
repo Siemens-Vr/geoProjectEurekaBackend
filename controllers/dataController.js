@@ -2,7 +2,7 @@ const Data = require('../models/dataModel');
 const upload = require('../middlewares/uploadMiddleware');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
-const Document= require('../models/docModel');
+const Document= require('../models/Document');
 const fs = require('fs');
 const path = require('path');
 
@@ -332,6 +332,74 @@ exports.getOneProject = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+
+exports.AnalyzeImage = async (req, res) => {
+    try {
+        // Decode the token to get user details
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        const { id } = req.body;
+        if (!id) {
+            return res.status(400).json({ message: 'ID is required' });
+        }
+
+        // Retrieve data
+        const data = await Data.findById(id);
+        if (!data) {
+            return res.status(404).json({ message: 'Data not found' });
+        }
+
+        // Send image to Flask server for prediction
+        const imageFilePath = data.imagePath; // Assuming `imagePath` is stored in `data`
+        const imageFile = fs.createReadStream(imageFilePath);
+        const formData = new FormData();
+        formData.append('file', imageFile);
+
+        const response = await axios.post('http://localhost:5000/predict', formData, {
+            headers: {
+                ...formData.getHeaders(),
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        const { prediction, confidence } = response.data;
+
+        // Add explanations based on the prediction result
+        const explanations = getClassExplanations(prediction);
+
+        res.json({
+            prediction,
+            confidence,
+            explanations,
+            data: data // return additional data if needed
+        });
+    } catch (error) {
+        console.error("Error in image analysis:", error);
+        res.status(500).json({ error: 'Image analysis failed' });
+    }
+};
+
+function getClassExplanations(prediction) {
+    const explanations = {
+        0: [
+            "Fire regions are characterized by high thermal activity.",
+            "Visible flames and smoke are indicators of fire.",
+        ],
+        1: [
+            "Geothermal natural sites exhibit high surface temperatures.",
+            "The ground surface often has natural heat emissions.",
+        ],
+        2: [
+            "Geothermal stations include artificial structures for energy harnessing.",
+            "Such stations have piping systems and turbines for power generation.",
+        ],
+    };
+
+    return explanations[prediction] || ["No explanation available"];
+}
 
 const convertUrlsToMediaObjects = (urls) => {
     return urls.map(url => {
